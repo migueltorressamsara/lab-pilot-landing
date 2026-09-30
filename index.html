@@ -704,7 +704,6 @@
   document.querySelectorAll("[data-pre-seg]").forEach(function(tile){
     tile.addEventListener("click", function(){
       preSeg = tile.getAttribute("data-pre-seg");
-      emailInput.placeholder = "Work email — " + tile.querySelector(".t-name").textContent;
       focusEmail();
     });
   });

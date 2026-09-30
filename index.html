@@ -1,0 +1,973 @@
+<title>Lab Automation Pilot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400;1,8..60,500&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    /* Surfaces — warm paper, hairline rules */
+    --bg:#F7F6F2;
+    --bg-alt:#F1EFEA;
+    --surface:#FFFFFF;
+    --surface-alt:#ECEEF0;
+    --ink:#17191E;
+    --ink-muted:#5A6170;
+    --ink-faint:#8A909B;
+    --line:#DEDCD5;
+    --line-strong:#C9C6BD;
+
+    /* Segment accents (unchanged hues, used sparingly) */
+    --c-hla:#0E7C86;       --c-hla-soft:#E4F1F1;      --c-hla-deep:#0A5D65;
+    --c-general:#3457A6;   --c-general-soft:#E8ECF6;  --c-general-deep:#28437F;
+    --c-vet:#B9533B;       --c-vet-soft:#F8ECE7;      --c-vet-deep:#96422E;
+    --c-research:#7C4A93;  --c-research-soft:#F1EAF4; --c-research-deep:#5E3770;
+
+    --cta:#0E7C86;
+    --cta-deep:#0A5D65;
+    --cta-ink:#FFFFFF;
+
+    --positive:#1E8A62;
+    --positive-soft:#E3F2EB;
+    --shadow:none;
+
+    --f-display:"Source Serif 4", "Iowan Old Style", Georgia, serif;
+    --f-body:"IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --f-mono:"IBM Plex Mono", ui-monospace, "SF Mono", Consolas, monospace;
+
+    --r-sm:4px;
+    --r-md:6px;
+    --ctl-h:50px;
+  }
+  /* Dark mode is opt-in only via data-theme="dark" on <html>. */
+  :root[data-theme="dark"]{
+    --bg:#101215;
+    --bg-alt:#14171B;
+    --surface:#1A1D22;
+    --surface-alt:#22262C;
+    --ink:#ECEAE4;
+    --ink-muted:#A3A7AF;
+    --ink-faint:#737882;
+    --line:#2C3037;
+    --line-strong:#3A3F47;
+
+    --c-hla:#4CC3CC;      --c-hla-soft:#15292B;      --c-hla-deep:#8FE0E6;
+    --c-general:#8AA6E8;  --c-general-soft:#1A2236;  --c-general-deep:#BACBF3;
+    --c-vet:#E2896F;      --c-vet-soft:#2C1F1A;      --c-vet-deep:#F0B49E;
+    --c-research:#C395D8; --c-research-soft:#261D2C; --c-research-deep:#DCB9E8;
+
+    --cta:#4CC3CC;
+    --cta-deep:#8FE0E6;
+    --cta-ink:#071517;
+
+    --positive:#4FD3A6;
+    --positive-soft:#13302A;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--f-body);
+    font-size:16px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    text-rendering:optimizeLegibility;
+    overflow-x:hidden;
+  }
+  ::selection{ background:var(--c-hla-soft); color:var(--ink); }
+  .screen{display:none;}
+  .screen.active{display:block;}
+
+  /* ================= Landing ================= */
+  #screen-landing{
+    padding:0 clamp(20px, 4vw, 40px);
+    min-height:100vh; min-height:100svh;
+    flex-direction:column;
+    position:relative;
+    isolation:isolate;
+  }
+  #screen-landing.active{ display:flex; }
+  /* Faint pegboard dot field — echoes the bench in the footage */
+  #screen-landing::before{
+    content:""; position:absolute; inset:0; z-index:-1; pointer-events:none;
+    background-image:radial-gradient(circle, rgba(23,25,30,.07) 1px, transparent 1.4px);
+    background-size:22px 22px;
+    background-position:11px 11px;
+    -webkit-mask-image:linear-gradient(to bottom, #000 0%, #000 55%, transparent 92%);
+            mask-image:linear-gradient(to bottom, #000 0%, #000 55%, transparent 92%);
+  }
+  .land-wrap{
+    width:100%; max-width:1160px; margin:0 auto;
+    padding-block:24px clamp(40px, 8vh, 88px);
+    flex:1; display:flex; flex-direction:column;
+  }
+  .brand-row{
+    display:flex; align-items:center; gap:10px;
+    font-family:var(--f-mono);
+    font-size:12px; font-weight:500;
+    letter-spacing:.06em; text-transform:uppercase;
+    color:var(--ink-muted);
+    padding-bottom:18px;
+    border-bottom:1px solid var(--line);
+    margin-bottom:clamp(40px, 11vh, 112px);
+  }
+  .brand-row .dot{
+    width:7px; height:7px; border-radius:50%;
+    background:var(--c-hla);
+    box-shadow:0 0 0 3px var(--c-hla-soft);
+  }
+
+  .hero-grid{
+    display:grid;
+    grid-template-columns:minmax(0, 1fr) minmax(0, 1.08fr);
+    gap:clamp(40px, 6vw, 88px);
+    align-items:center;
+  }
+
+  h1.big{
+    font-family:var(--f-display);
+    font-optical-sizing:auto;
+    font-weight:500;
+    font-size:clamp(42px, 6.2vw, 76px);
+    line-height:1.02;
+    letter-spacing:-0.022em;
+    margin:0 0 24px;
+    color:var(--ink);
+    text-wrap:balance;
+  }
+  h1.big em{
+    display:inline-block;
+    font-style:italic; font-weight:400;
+    color:var(--c-hla);
+    letter-spacing:-0.015em;
+  }
+  .lede{
+    font-size:clamp(16.5px, 1.35vw, 18.5px);
+    line-height:1.6;
+    color:var(--ink-muted);
+    max-width:44ch;
+    margin:0 0 36px;
+    text-wrap:pretty;
+  }
+
+  .cta-row{
+    display:flex; gap:8px; flex-wrap:wrap;
+    max-width:500px; margin:0;
+  }
+  input.email-input{
+    flex:1 1 240px; min-width:0;
+    height:var(--ctl-h);
+    font-family:var(--f-body);
+    font-size:16px;
+    padding:0 16px;
+    border-radius:var(--r-sm);
+    border:1px solid var(--line-strong);
+    background:var(--surface);
+    color:var(--ink);
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  input.email-input::placeholder, input.q-input::placeholder{ color:var(--ink-faint); }
+  input.email-input:hover{ border-color:var(--ink-faint); }
+  input.email-input:focus{ outline:none; }
+  input.email-input:focus-visible{
+    border-color:var(--cta);
+    box-shadow:0 0 0 3px var(--c-hla-soft);
+  }
+
+  /* Video */
+  .video-wrap{ position:relative; }
+  .video-frame{
+    position:relative;
+    border-radius:var(--r-md);
+    overflow:hidden;
+    background:#0E0F11;
+    aspect-ratio:16/9;
+    box-shadow:0 0 0 1px rgba(23,25,30,.08), 0 1px 2px rgba(23,25,30,.06);
+  }
+  .video-frame video{ display:block; width:100%; height:100%; object-fit:cover; }
+  .video-caption{
+    display:flex; align-items:center; gap:8px;
+    margin:12px 0 0;
+    font-family:var(--f-mono);
+    font-size:11.5px; letter-spacing:.02em;
+    color:var(--ink-muted);
+    text-align:left;
+  }
+  .video-caption::before{
+    content:""; flex:none;
+    width:6px; height:6px; border-radius:50%;
+    background:#C8432F;
+    animation:rec 2.4s ease-in-out infinite;
+  }
+  @keyframes rec{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+
+  footer.legal{
+    width:100%; max-width:1160px; margin:0 auto;
+    padding:18px 0 28px;
+    border-top:1px solid var(--line);
+    font-family:var(--f-mono);
+    font-size:11.5px; letter-spacing:.02em;
+    color:var(--ink-muted); line-height:1.6;
+  }
+
+  @media (max-width:880px){
+    .hero-grid{ grid-template-columns:1fr; gap:44px; }
+    .brand-row{ margin-bottom:44px; }
+    .lede{ max-width:52ch; }
+  }
+  @media (max-width:520px){
+    .land-wrap{ padding-top:18px; padding-bottom:48px; }
+    .brand-row{ font-size:11px; padding-bottom:14px; margin-bottom:36px; }
+    h1.big{ font-size:clamp(40px, 12vw, 52px); margin-bottom:18px; }
+    .lede{ margin-bottom:28px; }
+    .cta-row{ flex-direction:column; gap:10px; }
+    .cta-row .email-input, .cta-row .btn-chunky{ flex:none; width:100%; }
+    .hero-grid{ gap:36px; }
+    .video-frame{ border-radius:var(--r-sm); }
+  }
+
+  /* ================= Quiz shell ================= */
+  #screen-quiz{
+    background:var(--bg);
+    min-height:100vh; min-height:100svh;
+  }
+  .quiz-bar{
+    max-width:680px; margin:0 auto;
+    display:flex; align-items:center; gap:12px;
+    padding:18px 24px 0;
+  }
+  .back-btn{
+    flex:none;
+    width:40px; height:40px; margin-left:-10px;
+    background:none; border:none; cursor:pointer;
+    color:var(--ink-muted); border-radius:var(--r-sm);
+    display:flex; align-items:center; justify-content:center;
+    transition:color .15s ease, background .15s ease;
+  }
+  .back-btn:hover{ color:var(--ink); background:var(--bg-alt); }
+  .back-btn:focus-visible{ outline:2px solid var(--quiz-c, var(--cta)); outline-offset:1px; }
+  .back-btn svg{ width:18px; height:18px; }
+  .progress-track{
+    flex:1; height:3px; border-radius:2px;
+    background:var(--line); overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    background:var(--quiz-c, var(--cta));
+    width:0%;
+    transition:width .35s cubic-bezier(.4,0,.2,1), background-color .3s ease;
+  }
+  @media (prefers-reduced-motion:reduce){ .progress-fill{transition:none;} }
+
+  .quiz-body{
+    max-width:680px; margin:0 auto;
+    padding:clamp(40px, 10vh, 104px) 24px 72px;
+    min-height:calc(100vh - 58px); min-height:calc(100svh - 58px);
+    display:flex; flex-direction:column; justify-content:flex-start;
+  }
+  .q-step{ display:none; }
+  .q-step.active{ display:block; animation:qin .3s cubic-bezier(.2,.7,.2,1); }
+  @keyframes qin{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;} }
+  @media (prefers-reduced-motion:reduce){ .q-step.active{animation:none;} }
+  /* Keep single-field steps to a comfortable reading measure */
+  .q-step[data-step="org"], .q-step[data-step="role"],
+  .q-step[data-step="headcount"], .q-step[data-step="pain"],
+  .q-step[data-step="done"]{ max-width:520px; }
+
+  .q-eyebrow{
+    font-family:var(--f-mono);
+    font-size:11.5px; font-weight:500;
+    letter-spacing:.08em; text-transform:uppercase;
+    color:var(--quiz-c, var(--ink-muted));
+    margin:0 0 14px;
+  }
+  h2.q-title{
+    font-family:var(--f-display);
+    font-optical-sizing:auto;
+    font-weight:500;
+    font-size:clamp(28px, 4.2vw, 38px);
+    line-height:1.12;
+    letter-spacing:-0.015em;
+    margin:0 0 12px;
+    text-wrap:balance;
+  }
+  .q-sub{
+    color:var(--ink-muted);
+    font-size:16px; line-height:1.55;
+    margin:0 0 32px;
+    max-width:48ch;
+    text-wrap:pretty;
+  }
+  h2.q-title + .q-input,
+  h2.q-title + .pain-scale{ margin-top:28px; }
+
+  /* Segment cards */
+  .seg-grid{
+    display:grid; grid-template-columns:1fr 1fr;
+    gap:12px; margin:0 0 8px;
+  }
+  .seg-card{
+    position:relative;
+    text-align:left;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--r-md);
+    padding:20px 20px 18px;
+    cursor:pointer; font-family:inherit; color:var(--ink);
+    display:grid;
+    grid-template-columns:36px 1fr;
+    column-gap:14px; row-gap:4px;
+    align-content:start;
+    transition:border-color .15s ease, background-color .15s ease, transform .15s ease;
+  }
+  .seg-card[data-seg="hla"]{ --seg-c:var(--c-hla); --seg-soft:var(--c-hla-soft); }
+  .seg-card[data-seg="general"]{ --seg-c:var(--c-general); --seg-soft:var(--c-general-soft); }
+  .seg-card[data-seg="vet"]{ --seg-c:var(--c-vet); --seg-soft:var(--c-vet-soft); }
+  .seg-card[data-seg="research"]{ --seg-c:var(--c-research); --seg-soft:var(--c-research-soft); }
+
+  .seg-card:hover{
+    border-color:var(--seg-c, var(--line-strong));
+  }
+  .seg-card:hover .seg-icon{ background:var(--seg-c); color:#fff; }
+  .seg-card:active{ transform:translateY(1px); }
+  .seg-card:focus-visible{ outline:2px solid var(--seg-c, var(--ink)); outline-offset:2px; }
+  .seg-card.pop{
+    border-color:var(--seg-c, var(--line));
+    background:var(--seg-soft, var(--surface));
+    box-shadow:inset 0 0 0 1px var(--seg-c);
+  }
+  .seg-card.pop .seg-icon{ background:var(--seg-c); color:#fff; }
+
+  .seg-icon{
+    grid-row:1 / span 2;
+    width:36px; height:36px; border-radius:var(--r-sm);
+    background:var(--seg-soft, var(--surface-alt));
+    color:var(--seg-c, var(--ink-muted));
+    display:flex; align-items:center; justify-content:center;
+    transition:background-color .15s ease, color .15s ease;
+  }
+  .seg-icon svg{ width:19px; height:19px; }
+  .seg-name{
+    grid-column:2;
+    font-weight:600; font-size:15.5px; line-height:1.3;
+    letter-spacing:-0.005em;
+    padding-top:1px;
+  }
+  .seg-desc{
+    grid-column:2;
+    font-size:13.5px; line-height:1.45;
+    color:var(--ink-muted);
+  }
+  .seg-quote{
+    grid-column:1 / -1;
+    margin-top:14px; padding-top:12px;
+    border-top:1px solid var(--line);
+    font-family:var(--f-display);
+    font-style:italic; font-weight:400;
+    font-size:14.5px; line-height:1.45;
+    color:var(--ink);
+    opacity:.82;
+    text-wrap:pretty;
+  }
+  .seg-card:hover .seg-quote, .seg-card.pop .seg-quote{ opacity:1; }
+  @media (prefers-reduced-motion:reduce){ .seg-card, .seg-icon{transition:none;} }
+
+  /* Inputs */
+  input.q-input{
+    display:block; width:100%;
+    height:56px;
+    font-family:var(--f-body);
+    font-size:17px;
+    padding:0 16px;
+    border-radius:var(--r-sm);
+    border:1px solid var(--line-strong);
+    background:var(--surface); color:var(--ink);
+    margin-bottom:16px;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  input.q-input:hover{ border-color:var(--ink-faint); }
+  input.q-input:focus{ outline:none; }
+  input.q-input:focus-visible{
+    border-color:var(--quiz-c, var(--cta));
+    box-shadow:0 0 0 3px color-mix(in srgb, var(--quiz-c, var(--cta)) 16%, transparent);
+  }
+  input.q-input[type="number"]{ font-variant-numeric:tabular-nums; }
+
+  /* Pain slider */
+  .pain-scale{
+    display:flex; align-items:center; gap:20px;
+    padding:22px 20px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--r-md) var(--r-md) 0 0;
+    margin:0;
+  }
+  .pain-value{
+    order:-1; flex:none;
+    font-family:var(--f-display);
+    font-size:30px; font-weight:500; line-height:1;
+    font-variant-numeric:tabular-nums lining-nums;
+    min-width:2.6em;
+    color:var(--quiz-c, var(--cta));
+  }
+  input[type="range"]{
+    flex:1; min-width:0; height:28px; margin:0;
+    -webkit-appearance:none; appearance:none;
+    background:transparent; cursor:pointer;
+    accent-color:var(--quiz-c, var(--cta));
+  }
+  input[type="range"]:focus{ outline:none; }
+  input[type="range"]::-webkit-slider-runnable-track{
+    height:4px; border-radius:2px;
+    background:
+      repeating-linear-gradient(to right, var(--line-strong) 0 1px, transparent 1px 25%) 0 0/100% 100%,
+      var(--line);
+  }
+  input[type="range"]::-moz-range-track{ height:4px; border-radius:2px; background:var(--line); }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none; appearance:none;
+    width:22px; height:22px; margin-top:-9px; border-radius:50%;
+    background:var(--surface);
+    border:2px solid var(--quiz-c, var(--cta));
+    transition:transform .12s ease;
+  }
+  input[type="range"]::-moz-range-thumb{
+    width:18px; height:18px; border-radius:50%;
+    background:var(--surface);
+    border:2px solid var(--quiz-c, var(--cta));
+  }
+  input[type="range"]:active::-webkit-slider-thumb{ transform:scale(1.1); }
+  input[type="range"]:focus-visible::-webkit-slider-thumb{
+    box-shadow:0 0 0 4px color-mix(in srgb, var(--quiz-c, var(--cta)) 18%, transparent);
+  }
+  .pain-labels{
+    display:flex; justify-content:space-between; gap:12px;
+    padding:10px 20px;
+    background:var(--bg-alt);
+    border:1px solid var(--line); border-top:none;
+    border-radius:0 0 var(--r-md) var(--r-md);
+    font-family:var(--f-mono);
+    font-size:11.5px; letter-spacing:.02em;
+    color:var(--ink-muted);
+    margin-bottom:24px;
+  }
+
+  /* Buttons */
+  button{ font-family:inherit; cursor:pointer; }
+  .btn-chunky{
+    height:var(--ctl-h);
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    font-family:var(--f-body);
+    font-size:15.5px; font-weight:600; letter-spacing:.005em;
+    border-radius:var(--r-sm);
+    border:1px solid transparent;
+    padding:0 24px;
+    background:var(--quiz-c, var(--cta));
+    color:var(--cta-ink);
+    white-space:nowrap;
+    transition:background-color .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .btn-chunky:hover{ background:var(--quiz-c-deep, var(--cta-deep)); }
+  .btn-chunky:active{ transform:translateY(1px); }
+  .btn-chunky:focus-visible{
+    outline:2px solid var(--quiz-c, var(--cta)); outline-offset:2px;
+  }
+  .btn-chunky:disabled,
+  .btn-chunky:disabled:hover{
+    background:var(--surface-alt);
+    color:var(--ink-faint);
+    border-color:var(--line);
+    cursor:not-allowed; transform:none;
+  }
+  .btn-wide{ width:100%; height:54px; }
+  .skip-link{
+    display:block; text-align:center; margin-top:16px; background:none; border:none;
+    color:var(--ink-muted); font-size:13px; text-decoration:underline;
+    text-underline-offset:3px; cursor:pointer;
+  }
+
+  /* ================= Done ================= */
+  .done-check{
+    display:block;
+    width:44px; height:44px;
+    color:var(--positive);
+    margin-bottom:22px;
+    opacity:0;
+  }
+  .done-check.pop{ animation:fadein .35s ease forwards; }
+  @keyframes fadein{ from{opacity:0; transform:scale(.92);} to{ opacity:1; transform:none; } }
+  @media (prefers-reduced-motion:reduce){ .done-check{opacity:1;} .done-check.pop{animation:none;} }
+
+  #copy-btn{
+    background:transparent;
+    color:var(--ink);
+    border-color:var(--line-strong);
+    font-weight:500;
+  }
+  #copy-btn:hover{
+    background:var(--surface);
+    border-color:var(--ink-faint);
+  }
+
+  .copy-box{
+    display:none; width:100%; margin-top:16px;
+    font-family:var(--f-mono);
+    font-size:12.5px; line-height:1.65;
+    border-radius:var(--r-sm);
+    border:1px solid var(--line);
+    background:var(--surface);
+    color:var(--ink); padding:14px 16px; resize:vertical;
+  }
+  .copy-box.open{ display:block; }
+  .copy-box:focus-visible{ outline:2px solid var(--quiz-c, var(--cta)); outline-offset:1px; }
+
+  @media (max-width:560px){
+    .quiz-bar{ padding:12px 16px 0; }
+    .quiz-body{ padding:36px 18px 56px; }
+    .seg-grid{ grid-template-columns:1fr; gap:10px; }
+    .seg-card{ padding:16px 16px 15px; }
+    .seg-quote{ margin-top:12px; padding-top:10px; font-size:14px; }
+    .q-sub{ margin-bottom:24px; }
+    .pain-scale{ padding:18px 16px; gap:14px; }
+    .pain-value{ font-size:26px; }
+    .pain-labels{ padding:10px 16px; font-size:11px; }
+    #copy-btn{ width:100%; }
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    .video-caption::before{ animation:none; }
+  }
+
+  /* v2: compact cards, arrow affordance (cards auto-advance) */
+  .seg-card{ grid-template-columns:36px 1fr 16px; padding:18px 18px 18px 18px; align-items:center; }
+  .seg-card .seg-name{ align-self:end; }
+  .seg-card .seg-desc{ align-self:start; }
+  .seg-card::after{
+    content:""; grid-column:3; grid-row:1 / span 2; justify-self:end;
+    width:8px; height:8px; margin-right:2px;
+    border-top:1.6px solid currentColor; border-right:1.6px solid currentColor;
+    transform:rotate(45deg); color:var(--ink-faint);
+    transition:transform .15s ease, color .15s ease;
+  }
+  .seg-card:hover::after, .seg-card.pop::after{ color:var(--seg-c); transform:translateX(3px) rotate(45deg); }
+  .seg-grid{ margin-top:32px; }
+  @media (prefers-reduced-motion:reduce){ .seg-card::after{transition:none;} }
+
+  /* v2.1 additions */
+  .cta-note{ margin:16px 0 0; font-size:14.5px; line-height:1.5; color:var(--ink); max-width:500px; text-wrap:pretty; }
+  .hc-continue[hidden]{ display:none !important; }
+  .cta-privacy{ margin:6px 0 0; font-size:12.5px; line-height:1.5; color:var(--ink-faint); }
+  footer.legal{ display:flex; justify-content:space-between; gap:8px 24px; flex-wrap:wrap; }
+  footer.legal a{ color:var(--ink); text-decoration:underline; text-decoration-color:var(--line-strong); text-underline-offset:3px; }
+  footer.legal a:hover{ text-decoration-color:currentColor; }
+  .hc-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:28px; }
+  .hc-chip{
+    height:64px; border-radius:var(--r-md);
+    border:1px solid var(--line-strong); background:var(--surface); color:var(--ink);
+    font-family:var(--f-display); font-size:22px; font-weight:500;
+    font-variant-numeric:lining-nums tabular-nums;
+    transition:border-color .15s ease, background-color .15s ease, color .15s ease;
+  }
+  .hc-chip:hover{ border-color:var(--quiz-c, var(--cta)); color:var(--quiz-c, var(--cta)); }
+  .hc-chip:focus-visible{ outline:2px solid var(--quiz-c, var(--cta)); outline-offset:2px; }
+  .hc-chip.selected{
+    background:var(--quiz-c, var(--cta)); border-color:var(--quiz-c, var(--cta)); color:#fff;
+  }
+  @media (max-width:560px){ .hc-grid{ grid-template-columns:repeat(2,1fr); } .hc-chip{ height:58px; } }
+</style>
+
+<!-- ============ SCREEN 0: LANDING ============ -->
+<div class="screen active" id="screen-landing">
+  <div class="land-wrap">
+    <div class="brand-row"><span class="dot"></span>Georgia Tech EMBA · Lab Automation Pilot</div>
+
+    <div class="hero-grid">
+      <div>
+        <h1 class="big">Hands that <em>don't quit.</em></h1>
+        <p class="lede">Labs lose trained techs faster than they can replace them. We're building a robotic hand for the bench work that keeps walking out the door.</p>
+
+        <form id="email-form">
+          <div class="cta-row">
+            <input class="email-input" type="email" id="f-email-initial" placeholder="Email address" required autocomplete="email">
+            <button type="submit" class="btn-chunky" id="interested-btn" disabled>I'm interested</button>
+          </div>
+          <p class="cta-note">Pilot partners get early access and help shape what we build.</p>
+          <p class="cta-privacy">We'll only use your email to contact you about the pilot.</p>
+        </form>
+      </div>
+
+      <div class="video-wrap">
+        <div class="video-frame">
+          <video autoplay muted loop playsinline preload="auto" poster="assets/hero-poster.jpg" aria-hidden="true">
+            <source src="assets/hero-loop.webm" type="video/webm">
+            <source src="assets/hero-loop.mp4" type="video/mp4">
+          </video>
+        </div>
+        <p class="video-caption">Prototype hardware — sample handling, unedited</p>
+      </div>
+    </div>
+  </div>
+
+  <footer class="legal">
+    <span>Early-stage academic research pilot from a Georgia Tech EMBA team.</span>
+    <span class="legal-contact">Questions? <a href="/cdn-cgi/l/email-protection#e18c958e93938492a1868095848289cf848594"><span class="__cf_email__" data-cfemail="1578617a676770665572746170767d3b707160">[email&#160;protected]</span></a></span>
+  </footer>
+</div>
+
+<!-- ============ SCREEN 1: QUIZ ============ -->
+<div class="screen" id="screen-quiz">
+  <div class="quiz-bar">
+    <button type="button" class="back-btn" id="quiz-back" aria-label="Back">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+  </div>
+
+  <div class="quiz-body">
+
+    <!-- Step: segment -->
+    <div class="q-step" data-step="seg">
+      <p class="q-eyebrow">Question 1 of 5</p>
+      <h2 class="q-title">Which lab are you running?</h2>
+            <div class="seg-grid" role="group" aria-label="Lab segment">
+        <button type="button" class="seg-card" data-seg="hla">
+          <span class="seg-icon"><svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="12" r="6.2" stroke="currentColor" stroke-width="1.7"/><circle cx="15" cy="12" r="6.2" stroke="currentColor" stroke-width="1.7"/></svg></span>
+          <span class="seg-name">HLA / Transplant Typing</span>
+          <span class="seg-desc">Matching, antibody screening, crossmatch.</span>
+        </button>
+        <button type="button" class="seg-card" data-seg="general">
+          <span class="seg-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M12 4v16M4 12h16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></span>
+          <span class="seg-name">Hospital Clinical Lab</span>
+          <span class="seg-desc">Broad test menu, many benches.</span>
+        </button>
+        <button type="button" class="seg-card" data-seg="vet">
+          <span class="seg-icon"><svg viewBox="0 0 24 24" fill="currentColor"><ellipse cx="12" cy="15.2" rx="5.1" ry="4"/><ellipse cx="5.6" cy="9.2" rx="2.1" ry="2.5"/><ellipse cx="10.8" cy="5.8" rx="2.1" ry="2.5"/><ellipse cx="16.6" cy="7.6" rx="2.1" ry="2.5"/></svg></span>
+          <span class="seg-name">Veterinary Reference Lab</span>
+          <span class="seg-desc">High volume, same staffing crunch.</span>
+        </button>
+        <button type="button" class="seg-card" data-seg="research">
+          <span class="seg-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M9.5 3h5M10.2 3v6.4l-4.6 8.1a1.9 1.9 0 0 0 1.65 2.85h9.5a1.9 1.9 0 0 0 1.65-2.85l-4.6-8.1V3" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/></svg></span>
+          <span class="seg-name">Research / University Lab</span>
+          <span class="seg-desc">Academic, translational, or core facility.</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Step: org -->
+    <div class="q-step" data-step="org">
+      <p class="q-eyebrow">Question 2 of 5</p>
+      <h2 class="q-title">Which lab or organization?</h2>
+      <p class="q-sub">Optional — skip if you'd rather not say.</p>
+      <input type="text" class="q-input" id="f-org" placeholder="e.g. Emory Transplant Immunology" autocomplete="organization">
+      <button type="button" class="btn-chunky btn-wide" data-next="org">Continue</button>
+    </div>
+
+    <!-- Step: role -->
+    <div class="q-step" data-step="role">
+      <p class="q-eyebrow">Question 3 of 5</p>
+      <h2 class="q-title">What's your role?</h2>
+      <input type="text" class="q-input" id="f-role" placeholder="e.g. Lab Director" autocomplete="organization-title">
+      <button type="button" class="btn-chunky btn-wide" data-next="role">Continue</button>
+    </div>
+
+    <!-- Step: headcount -->
+    <div class="q-step" data-step="headcount">
+      <p class="q-eyebrow">Question 4 of 5</p>
+      <h2 class="q-title">How many techs work this bench?</h2>
+      <div class="hc-grid" role="group" aria-label="Technologists on this bench">
+        <button type="button" class="hc-chip" data-hc="1–2">1–2</button>
+        <button type="button" class="hc-chip" data-hc="3–5">3–5</button>
+        <button type="button" class="hc-chip" data-hc="6–10">6–10</button>
+        <button type="button" class="hc-chip" data-hc="10+">10+</button>
+      </div>
+      <input type="hidden" id="f-headcount" value="">
+      <button type="button" class="btn-chunky btn-wide hc-continue" data-next="headcount" hidden>Continue</button>
+    </div>
+
+    <!-- Step: pain -->
+    <div class="q-step" data-step="pain">
+      <p class="q-eyebrow">Question 5 of 5</p>
+      <h2 class="q-title">How hard is it to staff this bench?</h2>
+      <div class="pain-scale">
+        <input type="range" id="f-pain" min="1" max="5" value="3">
+        <span class="pain-value" id="pain-value">3 / 5</span>
+      </div>
+      <div class="pain-labels"><span>1 — Manageable</span><span>5 — Critical</span></div>
+      <button type="button" class="btn-chunky btn-wide" id="finish-btn">Finish</button>
+    </div>
+
+    <!-- Step: done -->
+    <div class="q-step" data-step="done">
+      <svg class="done-check" id="done-check" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M7 12.3l3.2 3.2L17 8.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <h2 class="q-title">You're on the list.</h2>
+      <p class="q-sub" id="done-text">Thanks — we'll be in touch soon.</p>
+      <button type="button" class="btn-chunky" id="copy-btn">Copy my answers</button>
+      <textarea class="copy-box" id="copy-box" readonly rows="6"></textarea>
+    </div>
+
+  </div>
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+(function(){
+  var TEAM_EMAIL = "mtorres@gatech.edu";
+
+  // ---- Formspree endpoint ----
+  // Replace with your own Formspree form endpoint (formspree.io -> New Form ->
+  // set the recipient to TEAM_EMAIL above -> copy the endpoint, looks like
+  // "https://formspree.io/f/xxxxxxxx"). Every submission below both emails
+  // that address AND is logged in the Formspree dashboard, so nothing needs
+  // to open the visitor's own mail client anymore.
+  var FORM_ENDPOINT = "https://formspree.io/f/mwlpywjd";
+
+  var segLabels = {
+    hla: "HLA / Transplant Typing",
+    general: "General Hospital Clinical Lab",
+    vet: "Veterinary Reference Lab",
+    research: "Research / University Lab"
+  };
+  var segVar = {
+    hla: { c: "--c-hla", deep: "--c-hla-deep" },
+    general: { c: "--c-general", deep: "--c-general-deep" },
+    vet: { c: "--c-vet", deep: "--c-vet-deep" },
+    research: { c: "--c-research", deep: "--c-research-deep" }
+  };
+
+  var STEPS = ["seg", "org", "role", "headcount", "pain", "done"];
+  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var state = { email: "", seg: null, org: "", role: "", headcount: "", pain: "3" };
+
+  var screenLanding = document.getElementById("screen-landing");
+  var screenQuiz = document.getElementById("screen-quiz");
+  var quizRoot = document.getElementById("screen-quiz");
+  var progressFill = document.getElementById("progress-fill");
+  var backBtn = document.getElementById("quiz-back");
+  var stepEls = {};
+  STEPS.forEach(function(s){ stepEls[s] = quizRoot.querySelector('.q-step[data-step="' + s + '"]'); });
+
+  var currentIndex = 0;
+
+  function getSource(){
+    try {
+      var p = new URLSearchParams(window.location.search);
+      return p.get("src") || "direct";
+    } catch(e){ return "direct"; }
+  }
+
+  // Open a mailto: link without navigating this document/frame. Setting
+  // window.location.href to a non-web protocol can get silently blocked
+  // inside a sandboxed iframe (e.g. an embedded artifact preview), which
+  // leaves the page blank instead of opening the mail client. A temporary
+  // <a target="_blank"> click avoids navigating the current frame at all.
+  // This is now only used as a last-resort fallback (see submitLead below).
+  function openMailto(href){
+    try {
+      var a = document.createElement("a");
+      a.href = href;
+      a.target = "_blank";
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch(e){
+      // Fallback for environments where the click-based approach fails.
+      window.location.href = href;
+    }
+  }
+
+  // Sends a lead straight to the team's inbox and logs it in the Formspree
+  // dashboard, without ever opening the visitor's own mail client. Fires in
+  // the background — the caller doesn't wait on it, so the quiz keeps
+  // advancing at normal speed. If the request fails for any reason (offline,
+  // ad blocker, endpoint not set up yet), it falls back to opening a mailto:
+  // link so the lead is never silently lost.
+  function submitLead(fields, subjectLine){
+    var payload = Object.assign({ _subject: subjectLine }, fields);
+    return fetch(FORM_ENDPOINT, {
+      method: "POST",
+      headers: { "Accept": "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    }).then(function(res){
+      if (!res.ok) throw new Error("Form submission responded with " + res.status);
+      return true;
+    }).catch(function(err){
+      console.error("Lead submission to Formspree failed, falling back to mailto:", err);
+      var mailBody = Object.keys(fields).map(function(k){ return k + ": " + fields[k]; }).join("\n");
+      var mailHref = "mailto:" + encodeURIComponent(TEAM_EMAIL) +
+        "?subject=" + encodeURIComponent(subjectLine) +
+        "&body=" + encodeURIComponent(mailBody);
+      openMailto(mailHref);
+      return false;
+    });
+  }
+
+  function setQuizAccent(){
+    if (!state.seg) return;
+    var vars = segVar[state.seg];
+    quizRoot.style.setProperty("--quiz-c", "var(" + vars.c + ")");
+    quizRoot.style.setProperty("--quiz-c-deep", "var(" + vars.deep + ")");
+  }
+
+  function showStep(index){
+    currentIndex = index;
+    var name = STEPS[index];
+    STEPS.forEach(function(s){ stepEls[s].classList.remove("active"); });
+    stepEls[name].classList.add("active");
+    backBtn.style.visibility = index === 0 ? "hidden" : "visible";
+    var pct = name === "done" ? 100 : Math.round(((index + 1) / (STEPS.length - 1)) * 100);
+    progressFill.style.width = Math.min(pct, 100) + "%";
+    if (name === "done") triggerDone();
+  }
+
+  function goTo(stepName){
+    var idx = STEPS.indexOf(stepName);
+    if (idx >= 0) showStep(idx);
+  }
+
+  backBtn.addEventListener("click", function(){
+    if (currentIndex === 0){
+      screenQuiz.classList.remove("active");
+      screenLanding.classList.add("active");
+      return;
+    }
+    showStep(currentIndex - 1);
+  });
+
+  // ---- Landing: email capture ----
+  var emailInput = document.getElementById("f-email-initial");
+  var interestedBtn = document.getElementById("interested-btn");
+  var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  emailInput.addEventListener("input", function(){
+    interestedBtn.disabled = !emailRe.test(emailInput.value.trim());
+  });
+
+  document.getElementById("email-form").addEventListener("submit", function(e){
+    e.preventDefault();
+    if (!emailRe.test(emailInput.value.trim())) return;
+    state.email = emailInput.value.trim();
+
+    // Lightweight immediate capture so the lead isn't lost if the quiz is
+    // abandoned — emails the team and logs the response right away.
+    submitLead(
+      { stage: "quick-capture", email: state.email, source: getSource() },
+      "Quick interest — Lab Automation Pilot"
+    );
+
+    screenLanding.classList.remove("active");
+    screenQuiz.classList.add("active");
+    showStep(0);
+  });
+
+  // ---- Step: segment (auto-advance) ----
+  quizRoot.querySelectorAll('[data-step="seg"] .seg-card').forEach(function(card){
+    card.addEventListener("click", function(){
+      state.seg = card.getAttribute("data-seg");
+      setQuizAccent();
+      if (!reduceMotion){
+        card.classList.add("pop");
+        setTimeout(function(){
+          goTo("org");
+        }, 220);
+      } else {
+        goTo("org");
+      }
+    });
+  });
+
+  // ---- Text/number steps ----
+  quizRoot.querySelectorAll('[data-next]').forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var step = btn.getAttribute("data-next");
+      if (step === "org") state.org = document.getElementById("f-org").value.trim();
+      if (step === "role") state.role = document.getElementById("f-role").value.trim();
+      if (step === "headcount") state.headcount = document.getElementById("f-headcount").value.trim();
+      var idx = STEPS.indexOf(step);
+      showStep(idx + 1);
+    });
+  });
+
+  // ---- Headcount chips ----
+  var hcInput = document.getElementById("f-headcount");
+  var hcNext = quizRoot.querySelector('[data-next="headcount"]');
+  quizRoot.querySelectorAll('.hc-chip').forEach(function(chip){
+    chip.addEventListener("click", function(){
+      quizRoot.querySelectorAll('.hc-chip').forEach(function(c){ c.classList.remove("selected"); });
+      chip.classList.add("selected");
+      hcInput.value = chip.getAttribute("data-hc");
+      setTimeout(function(){ hcNext.click(); }, reduceMotion ? 0 : 180);
+    });
+  });
+
+  // ---- Pain slider ----
+  var painInput = document.getElementById("f-pain");
+  var painValue = document.getElementById("pain-value");
+  painInput.addEventListener("input", function(){
+    painValue.textContent = painInput.value + " / 5";
+  });
+
+  function buildFullMessage(){
+    var seg = state.seg ? segLabels[state.seg] : "(not chosen)";
+    var lines = [
+      "Email: " + (state.email || "(not given)"),
+      "Lab segment: " + seg,
+      "Lab / organization: " + (state.org || "(not given)"),
+      "Role: " + (state.role || "(not given)"),
+      "Technologists on this bench: " + (state.headcount || "(not given)"),
+      "Hiring & retention pain (1-5): " + state.pain,
+      "Source: " + getSource()
+    ];
+    return lines.join("\n");
+  }
+
+  document.getElementById("finish-btn").addEventListener("click", function(){
+    state.pain = painInput.value;
+    var seg = state.seg ? segLabels[state.seg] : "(not chosen)";
+    var subject = "Pilot interest — " + (state.seg ? segLabels[state.seg] : "Lab Automation Pilot");
+    submitLead(
+      {
+        stage: "full-quiz",
+        email: state.email || "(not given)",
+        segment: seg,
+        organization: state.org || "(not given)",
+        role: state.role || "(not given)",
+        headcount: state.headcount || "(not given)",
+        pain: state.pain,
+        source: getSource()
+      },
+      subject
+    );
+    goTo("done");
+  });
+
+  var doneCheck = document.getElementById("done-check");
+  function triggerDone(){
+    doneCheck.classList.remove("pop");
+    requestAnimationFrame(function(){
+      if (!reduceMotion){
+        doneCheck.classList.add("pop");
+      } else {
+        doneCheck.style.opacity = "1";
+      }
+    });
+  }
+
+  var copyBtn = document.getElementById("copy-btn");
+  var copyBox = document.getElementById("copy-box");
+  var doneText = document.getElementById("done-text");
+  copyBtn.addEventListener("click", function(){
+    var text = buildFullMessage();
+    var ok = false;
+    try { navigator.clipboard.writeText(text); ok = true; } catch(e){ ok = false; }
+    copyBox.value = text;
+    copyBox.classList.add("open");
+    doneText.textContent = ok
+      ? "Copied. Paste it into an email or text to send it our way."
+      : "Couldn't copy automatically — select the text below and copy it manually.";
+  });
+})();
+</script>

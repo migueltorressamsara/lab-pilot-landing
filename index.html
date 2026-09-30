@@ -225,20 +225,16 @@
   [data-seg="research"]{--seg-c:var(--c-research); --seg-soft:var(--c-research-soft);}
 
   /* ================= How it works ================= */
-  .flow-layout{display:flex; gap:56px; align-items:flex-start;}
-  .flow-list{display:flex; flex-direction:column; flex:1 1 420px; max-width:640px;}
-  .flow-graphic{
-    flex:1 1 280px; max-width:320px; align-self:stretch;
-    border:1px solid var(--line); border-radius:var(--r-lg); background:var(--surface);
-    padding:28px 20px; display:flex; align-items:center; justify-content:center;
-  }
-  .flow-graphic > svg{width:100%; height:auto; max-width:260px;}
+  /* .flow-step provides the icon + connecting line + spacing "skeleton" and is
+     reused verbatim for both the text steps (left) and the graphic's nodes
+     (right) — see .flow-node below — so the two columns can share CSS Grid
+     row tracks and always land at the same height, however the text wraps. */
   .flow-step{position:relative; display:flex; gap:22px; padding-bottom:40px;}
-  .flow-step:last-child{padding-bottom:0;}
   .flow-step::before{
     content:""; position:absolute; left:25px; top:54px; bottom:0; width:1px; background:var(--line);
   }
-  .flow-step:last-child::before{display:none;}
+  .flow-end::before{display:none;}
+  .flow-end{padding-bottom:0;}
   .flow-icon{
     position:relative; z-index:1; flex:none; width:52px; height:52px; border-radius:50%;
     background:var(--surface); border:1px solid var(--line-strong); color:var(--cta);
@@ -252,6 +248,44 @@
   }
   .flow-title{font-size:19px; font-weight:600; letter-spacing:-.01em; margin:6px 0 6px;}
   .flow-desc{font-size:14.5px; line-height:1.55; color:var(--ink-muted); max-width:52ch;}
+
+  .flow-list{display:flex; flex-direction:column; max-width:640px;}
+  .flow-nodes, .flow-graphic-bg, .flow-loop, .flow-loop-label{display:none;}
+
+  /* Desktop: real CSS Grid, not a fixed-coordinate graphic — each node sits
+     in the same grid row as its matching text step, so row height (driven by
+     however many lines the description wraps to) is always shared and the
+     two columns can never drift out of alignment. */
+  @media (min-width:961px){
+    .flow-layout{display:grid; grid-template-columns:minmax(0,1fr) minmax(220px,300px); grid-template-rows:repeat(4, auto); column-gap:56px;}
+    .flow-list{display:contents; max-width:none;}
+    .flow-list .flow-step{grid-column:1;}
+    .flow-list .flow-step:nth-child(1){grid-row:1;}
+    .flow-list .flow-step:nth-child(2){grid-row:2;}
+    .flow-list .flow-step:nth-child(3){grid-row:3;}
+    .flow-list .flow-step:nth-child(4){grid-row:4;}
+
+    .flow-graphic-bg{
+      display:block; grid-column:2; grid-row:1 / -1;
+      border:1px solid var(--line); border-radius:var(--r-lg); background:var(--surface);
+    }
+    .flow-nodes{display:contents;}
+    .flow-node{grid-column:2; padding:0 24px; align-self:stretch;}
+    .flow-node:nth-child(1){grid-row:1; padding-top:28px;}
+    .flow-node:nth-child(2){grid-row:2;}
+    .flow-node:nth-child(3){grid-row:3;}
+    .flow-node:nth-child(4){grid-row:4;}
+    .flow-node-label b{display:block; font-size:13.5px; font-weight:600; color:var(--ink);}
+    .flow-node-label span{font-family:var(--f-mono); font-size:11.5px; color:var(--ink-muted);}
+
+    .flow-loop{display:block; grid-column:2; grid-row:1 / -1; width:100%; height:100%; overflow:visible;}
+    .flow-loop-label{display:block; grid-column:2; grid-row:1 / -1; position:relative;}
+    .flow-loop-label span{
+      position:absolute; top:50%; right:16px; white-space:nowrap;
+      transform:translateY(-50%) rotate(90deg); transform-origin:center;
+      font-family:var(--f-mono); font-size:10.5px; letter-spacing:.08em; color:var(--cta);
+    }
+  }
 
   /* Closing band */
   .close-band{
@@ -288,9 +322,6 @@
     .hero-grid{grid-template-columns:1fr; gap:44px;}
     .lede{max-width:52ch;}
     .seg-rail{grid-template-columns:repeat(2, minmax(0,1fr));}
-    .flow-layout{flex-direction:column;}
-    .flow-list{max-width:none;}
-    .flow-graphic{max-width:320px; margin:0 auto; align-self:center;}
   }
   @media (max-width: 560px){
     .wordmark small{display:none;}
@@ -579,7 +610,7 @@
               <p class="flow-desc">The dexterous hand pipettes, moves samples, and runs your existing instruments — using tactile and visual feedback to catch problems instead of failing silently.</p>
             </div>
           </div>
-          <div class="flow-step">
+          <div class="flow-step flow-end">
             <span class="flow-icon">
               <span class="flow-num">4</span>
               <svg viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3.2v5.3c0 4.6-3 7.7-7 9.2-4-1.5-7-4.6-7-9.2V6.2L12 3z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 12.2l2.1 2.1 4-4.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -591,61 +622,31 @@
           </div>
         </div>
 
-        <div class="flow-graphic" aria-hidden="true">
-          <svg viewBox="0 0 260 560" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <marker id="flowArrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse" style="color:var(--line-strong)">
-                <path d="M0,0 L10,5 L0,10 Z" fill="currentColor"/>
-              </marker>
-              <marker id="loopArrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse" style="color:var(--cta)">
-                <path d="M0,0 L10,5 L0,10 Z" fill="currentColor"/>
-              </marker>
-            </defs>
+        <div class="flow-graphic-bg" aria-hidden="true"></div>
 
-            <!-- straight flow: node 1 -> 2 -> 3 -> 4 -->
-            <g style="color:var(--line-strong)">
-              <line x1="50" y1="90" x2="50" y2="177" stroke="currentColor" stroke-width="1.5" marker-end="url(#flowArrow)"/>
-              <line x1="50" y1="237" x2="50" y2="323" stroke="currentColor" stroke-width="1.5" marker-end="url(#flowArrow)"/>
-              <line x1="50" y1="383" x2="50" y2="470" stroke="currentColor" stroke-width="1.5" marker-end="url(#flowArrow)"/>
-            </g>
-
-            <!-- loop back: node 4 -> node 1, "result flows back to the LIS" -->
-            <path d="M74,524 C 235,470 235,112 74,78" stroke="var(--cta)" stroke-width="1.5" stroke-dasharray="3 6" marker-end="url(#loopArrow)"/>
-            <text x="248" y="300" transform="rotate(90 248 300)" text-anchor="middle" font-family="var(--f-mono)" font-size="10.5" letter-spacing=".08em" fill="var(--cta)">RESULT → LIS</text>
-
-            <!-- node 1: LIS / EHR order -->
-            <circle cx="50" cy="60" r="30" fill="var(--surface)" stroke="var(--line-strong)" stroke-width="1.5"/>
-            <g style="color:var(--cta)">
-              <svg x="38" y="48" width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="5" y="4" width="14" height="17" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1" stroke="currentColor" stroke-width="1.7"/><path d="M8.5 10h7M8.5 13.5h7M8.5 17h4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-            </g>
-            <text x="96" y="56" font-family="var(--f-mono)" font-size="12.5" fill="var(--ink)">LIS / EHR</text>
-            <text x="96" y="72" font-family="var(--f-mono)" font-size="12.5" fill="var(--ink-muted)">order</text>
-
-            <!-- node 2: robot plan -->
-            <circle cx="50" cy="207" r="30" fill="var(--surface)" stroke="var(--line-strong)" stroke-width="1.5"/>
-            <g style="color:var(--cta)">
-              <svg x="38" y="195" width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="6" y="6" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M9 6V3M15 6V3M9 21v-3M15 21v-3M6 9H3M6 15H3M21 9h-3M21 15h-3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-            </g>
-            <text x="96" y="203" font-family="var(--f-mono)" font-size="12.5" fill="var(--ink)">Robot</text>
-            <text x="96" y="219" font-family="var(--f-mono)" font-size="12.5" fill="var(--ink-muted)">plan</text>
-
-            <!-- node 3: execution -->
-            <circle cx="50" cy="353" r="30" fill="var(--surface)" stroke="var(--line-strong)" stroke-width="1.5"/>
-            <g style="color:var(--cta)">
-              <svg x="41" y="341" width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M4 13V6.5M6.7 13V3.5M9.4 13V4.5M12 13V7" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
-            </g>
-            <text x="96" y="349" font-family="var(--f-mono)" font-size="12.5" fill="var(--ink)">Execution</text>
-            <text x="96" y="365" font-family="var(--f-mono)" font-size="12.5" fill="var(--ink-muted)">vision + touch</text>
-
-            <!-- node 4: audit log -->
-            <circle cx="50" cy="500" r="30" fill="var(--surface)" stroke="var(--line-strong)" stroke-width="1.5"/>
-            <g style="color:var(--cta)">
-              <svg x="38" y="488" width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3.2v5.3c0 4.6-3 7.7-7 9.2-4-1.5-7-4.6-7-9.2V6.2L12 3z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 12.2l2.1 2.1 4-4.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </g>
-            <text x="96" y="496" font-family="var(--f-mono)" font-size="12.5" fill="var(--ink)">Audit</text>
-            <text x="96" y="512" font-family="var(--f-mono)" font-size="12.5" fill="var(--ink-muted)">log</text>
-          </svg>
+        <div class="flow-nodes" aria-hidden="true">
+          <div class="flow-step flow-node">
+            <span class="flow-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="5" y="4" width="14" height="17" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1" stroke="currentColor" stroke-width="1.7"/><path d="M8.5 10h7M8.5 13.5h7M8.5 17h4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span>
+            <p class="flow-node-label"><b>LIS / EHR</b><span>order</span></p>
+          </div>
+          <div class="flow-step flow-node">
+            <span class="flow-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="6" y="6" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M9 6V3M15 6V3M9 21v-3M15 21v-3M6 9H3M6 15H3M21 9h-3M21 15h-3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span>
+            <p class="flow-node-label"><b>Robot</b><span>plan</span></p>
+          </div>
+          <div class="flow-step flow-node">
+            <span class="flow-icon"><svg viewBox="0 0 16 16" fill="none"><path d="M4 13V6.5M6.7 13V3.5M9.4 13V4.5M12 13V7" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg></span>
+            <p class="flow-node-label"><b>Execution</b><span>vision + touch</span></p>
+          </div>
+          <div class="flow-step flow-node flow-end">
+            <span class="flow-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3.2v5.3c0 4.6-3 7.7-7 9.2-4-1.5-7-4.6-7-9.2V6.2L12 3z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 12.2l2.1 2.1 4-4.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <p class="flow-node-label"><b>Audit</b><span>log</span></p>
+          </div>
         </div>
+
+        <svg class="flow-loop" viewBox="0 0 100 100" preserveAspectRatio="none" fill="none" aria-hidden="true">
+          <path d="M40,97 C 92,80 92,8 40,3" stroke="var(--cta)" stroke-width="0.6" stroke-dasharray="1.4 2.4" vector-effect="non-scaling-stroke"/>
+        </svg>
+        <div class="flow-loop-label" aria-hidden="true"><span>RESULT → LIS</span></div>
       </div>
     </div>
   </section>

@@ -20,6 +20,27 @@
 <meta name="twitter:description" content="Labs lose trained techs faster than they can replace them. We're building a robotic hand for the bench work that keeps walking out the door.">
 <meta name="twitter:image" content="https://tirelesshands.com/assets/hero-poster.jpg">
 
+<!-- Google Analytics 4. Replace G-XXXXXXXXXX with your own Measurement ID
+     (analytics.google.com -> Admin -> Create property -> Web data stream).
+     Every event below (including the automatic page_view) carries the ?src=
+     campaign tag from the URL, so Acquisition/Events reports in GA4 can be
+     broken down by which channel (LinkedIn, ASHI forum, email, ...) actually
+     produced quiz starts and completions, not just raw clicks. -->
+<script>
+  (function(){
+    try { window.__src = new URLSearchParams(window.location.search).get("src") || "direct"; }
+    catch(e){ window.__src = "direct"; }
+  })();
+</script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  gtag("js", new Date());
+  gtag("set", { "src": window.__src });
+  gtag("config", "G-XXXXXXXXXX");
+</script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -879,6 +900,7 @@
     state.email = emailInput.value.trim();
     submitLead({ stage: "quick-capture", email: state.email, source: getSource() },
       "Quick interest — Lab Automation Pilot");
+    if (window.gtag) gtag("event", "quiz_started");
 
     quizRoot.querySelectorAll(".seg-card").forEach(function(c){
       c.classList.toggle("pre", c.getAttribute("data-seg") === preSeg);
@@ -959,6 +981,7 @@
       pain: state.pain,
       source: getSource()
     }, "Pilot interest — " + (state.seg ? segLabels[state.seg] : "Lab Automation Pilot"));
+    if (window.gtag) gtag("event", "quiz_finished", { segment: state.seg || "none" });
     goTo("done");
   });
 
@@ -986,6 +1009,7 @@
 
   var exitBtn = document.getElementById("exit-btn");
   exitBtn.addEventListener("click", function(){
+    if (window.gtag) gtag("event", "quiz_exit");
     copyBox.classList.remove("open");
     copyBox.value = "";
     doneText.textContent = "Thanks — we'll be in touch soon.";
